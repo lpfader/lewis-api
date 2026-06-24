@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Lewis API Terminal</title>
+    <style>
+    body { background: #111; color: #0f0; font-family: monospace; padding: 10px; }
+    #terminal { white-space: pre-wrap; }
+    #input { width: 100%; background: #111; color: #0f0; border: none; outline: none; font-family: monospace; }
+  </style>
+</head>
+<body>
+<p>
+    ok so this is basically a simulation of how a REST API would work. All of the data is contained in HTML so you're not going to be able to actually edit any database. I will try to make it so that if you do a PUT command you can get a simulated version of what your data would look like once added to the database. 
+</p>
+<div id="terminal">Lewis API Terminal
+Type "help" for commands.
+
+$ </div>
+<input id="input" autofocus />
+
+<script>
+  let db = [
+ const books = [
+  { id: 1, title: "Carrie", author: "Stephen King", year: 1974, isbn: "9780307743664" },
+  { id: 2, title: "'Salem's Lot", author: "Stephen King", year: 1975, isbn: "9780307743671" },
+  { id: 3, title: "The Shining", author: "Stephen King", year: 1977, isbn: "9780307743657" },
+  { id: 4, title: "Jurassic Park", author: "Michael Crichton", year: 1990, isbn: "9780345538987" },
+  { id: 5, title: "The World Is Flat", author: "Thomas L. Friedman", year: 2005, isbn: "9780374292881" },
+  { id: 6, title: "Angela's Ashes", author: "Frank McCourt", year: 1996, isbn: "9780684845250" },
+  { id: 7, title: "Into Thin Air", author: "Jon Krakauer", year: 1997, isbn: "9780385494786" },
+  { id: 8, title: "Alive", author: "Piers Paul Read", year: 1974, isbn: "9780060778665" }
+];
+
+  ];
+
+  const term = document.getElementById("terminal");
+  const input = document.getElementById("input");
+
+  function print(text) {
+    term.textContent += text + "\n";
+  }
+
+  function prompt() {
+    term.textContent += "$ ";
+  }
+
+  function handleCommand(cmd) {
+    print(cmd);
+
+    if (cmd === "help") {
+      print("Commands:");
+      print("  GET /books");
+      print("  GET /books/{id}");
+      print("  DELETE /books/{id}");
+      print("  POST /books title=... author=...");
+      print("  clear");
+      prompt();
+      return;
+    }
+
+    if (cmd === "clear") {
+      term.textContent = "";
+      prompt();
+      return;
+    }
+
+    if (cmd === "GET /books") {
+      print(JSON.stringify(db, null, 2));
+      prompt();
+      return;
+    }
+
+    if (cmd.startsWith("GET /books/")) {
+      const id = parseInt(cmd.split("/")[2]);
+      const book = db.find(b => b.id === id);
+      print(book ? JSON.stringify(book, null, 2) : "404 Not Found");
+      prompt();
+      return;
+    }
+
+    if (cmd.startsWith("DELETE /books/")) {
+      const id = parseInt(cmd.split("/")[2]);
+      const index = db.findIndex(b => b.id === id);
+      if (index === -1) {
+        print("404 Not Found");
+      } else {
+        db.splice(index, 1);
+        print("Book deleted");
+      }
+      prompt();
+      return;
+    }
+
+    if (cmd.startsWith("POST /books")) {
+      const parts = cmd.split(" ");
+      const params = parts.slice(2).join(" ");
+      const title = params.match(/title=([^ ]+)/)?.[1];
+      const author = params.match(/author=([^ ]+)/)?.[1];
+
+      if (!title || !author) {
+        print("400 Bad Request: Missing title or author");
+      } else {
+        const newBook = {
+          id: db.length + 1,
+          title: title.replace(/_/g, " "),
+          author: author.replace(/_/g, " ")
+        };
+        db.push(newBook);
+        print("201 Created");
+        print(JSON.stringify(newBook, null, 2));
+      }
+      prompt();
+      return;
+    }
+
+    print("Unknown command");
+    prompt();
+  }
+
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      const cmd = input.value.trim();
+      input.value = "";
+      handleCommand(cmd);
+    }
+  });
+
+  prompt();
+</script>
+
+</body>
+</html>
